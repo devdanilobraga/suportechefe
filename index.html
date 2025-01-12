@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calculadora de custo de produção para auxiliar empreendedores no planejamento financeiro. Descubra os custos detalhados de seus produtos.">
+  <meta name="keywords" content="cálculo de custo, custo de produção, planejamento financeiro, empreendedores, cozinha, receitas">
+  <meta name="author" content="Danilo Braga">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="./icons8-colher-16.png">
+  
+  <title>Cálculo de Custo de Produção</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      color: #333;
+      padding: 0;
+      overflow-x: hidden; /* Evita rolagem lateral */
+    }
+    header {
+      background: #0073e6;
+      color: white;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    section {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      flex: 1 1 calc(33.33% - 10px);
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input {
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    form button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      background: #0073e6;
+      color: white;
+      cursor: pointer;
+    }
+    form button:hover {
+      background: #005bb5;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    table th {
+      background-color: #0073e6;
+      color: white;
+    }
+    .result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .buttons button {
+      padding: 10px 15px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .buttons .clear {
+      background: #ff4d4d;
+      color: white;
+    }
+    .buttons .clear:hover {
+      background: #cc0000;
+    }
+    @media (max-width: 768px) {
+      section {
+        padding: 10px; /* Reduz o espaçamento lateral em dispositivos menores */
+      }
+      .form-group {
+        flex: 1 1 100%; /* Campos ocupam 100% da largura */
+      }
+      form button {
+        width: 100%; /* Botão ocupa a largura completa */
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Calculadora de Custo de Produção</h1>
+  <p>Descubra quanto você gasta para produzir seus produtos!</p>
+</header>
+
+<section>
+  <h2>Adicione seus Ingredientes</h2>
+  <form id="ingredientForm">
+    <div class="form-group">
+      <label for="ingredientName">Nome do Ingrediente</label>
+      <input type="text" id="ingredientName" placeholder="Ex.: Farinha, Açúcar" required>
+    </div>
+    <div class="form-group">
+      <label for="ingredientQuantity">Quantidade Produzida (unidades)</label>
+      <input type="number" id="ingredientQuantity" placeholder="Ex.: 10, 20" required>
+    </div>
+    <div class="form-group">
+      <label for="ingredientPrice">Preço do Ingrediente (R$)</label>
+      <input type="number" step="0.01" id="ingredientPrice" placeholder="Ex.: 5.99, 12.50" required>
+    </div>
+    <button type="button" onclick="addIngredient()">Adicionar Ingrediente</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Ingrediente</th>
+        <th>Quantidade Produzida</th>
+        <th>Preço (R$)</th>
+        <th>Custo por Unidade (R$)</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="ingredientTable">
+      <!-- Os ingredientes adicionados serão exibidos aqui -->
+    </tbody>
+  </table>
+
+  <div class="result" id="totalCost">
+    <!-- Custo total e custo por unidade serão exibidos aqui -->
+  </div>
+
+  <div class="buttons">
+    <button class="clear" onclick="clearAll()">Limpar Tudo</button>
+  </div>
+</section>
+
+<footer>
+  <p style="text-align: center; padding: 10px; background: #0073e6; color: white;">Desenvolvido para ajudar quem empreende na cozinha!</p>
+</footer>
+
+<script>
+  let ingredients = [];
+
+  function addIngredient() {
+    const name = document.getElementById('ingredientName').value;
+    const quantity = parseFloat(document.getElementById('ingredientQuantity').value);
+    const price = parseFloat(document.getElementById('ingredientPrice').value);
+
+    if (!name || quantity <= 0 || price <= 0) {
+      alert("Por favor, preencha todos os campos corretamente.");
+      return;
+    }
+
+    const costPerUnit = price / quantity;
+    ingredients.push({ name, quantity, price, costPerUnit });
+
+    updateTable();
+    calculateTotalCost();
+
+    document.getElementById('ingredientForm').reset();
+  }
+
+  function updateTable() {
+    const table = document.getElementById('ingredientTable');
+    table.innerHTML = ingredients.map((ingredient, index) => `
+      <tr>
+        <td>${ingredient.name}</td>
+        <td>${ingredient.quantity}</td>
+        <td>R$ ${ingredient.price.toFixed(2)}</td>
+        <td>R$ ${ingredient.costPerUnit.toFixed(2)}</td>
+        <td>
+          <button onclick="removeIngredient(${index})" style="background: #ff4d4d; color: white; border: none; padding: 5px 10px; cursor: pointer;">Remover</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function calculateTotalCost() {
+    const totalCost = ingredients.reduce((sum, ingredient) => sum + ingredient.price, 0);
+    const totalCostPerUnit = ingredients.reduce((sum, ingredient) => sum + ingredient.costPerUnit, 0);
+
+    document.getElementById('totalCost').textContent = `Custo total: R$ ${totalCost.toFixed(2)} | Soma dos custos por unidade: R$ ${totalCostPerUnit.toFixed(2)}`;
+  }
+
+  function removeIngredient(index) {
+    ingredients.splice(index, 1);
+    updateTable();
+    calculateTotalCost();
+  }
+
+  function clearAll() {
+    ingredients = [];
+    updateTable();
+    calculateTotalCost();
+  }
+</script>
+
+</body>
+</html>
